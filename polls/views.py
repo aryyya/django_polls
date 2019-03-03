@@ -3,7 +3,7 @@ from django.http import HttpResponse, Http404
 from .models import Question
 
 def index(request):
-    question_list = Question.objects.order_by('-pub_date')[:5]
+    question_list = Question.objects.order_by('-pub_date')
     return render(request, 'polls/index.html', {
         'question_list': question_list
     })
