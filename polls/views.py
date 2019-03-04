@@ -9,7 +9,9 @@ class IndexView(generic.ListView):
     context_object_name = 'question_list'
 
     def get_queryset(self):
-        return Question.objects.order_by('-pub_date')
+        questions_filtered = Question.objects.all().order_by('-pub_date')
+        questions_filtered = filter(lambda q: q.was_published_in_the_past(), questions_filtered)
+        return questions_filtered
 
 class DetailView(generic.DetailView):
     model = Question

@@ -25,6 +25,9 @@ class QuestionModelTests(TestCase):
         new_question = Question(pub_date=almost_one_day_ago)
         self.assertIs(new_question.was_published_recently(), True)
 
+def create_question(question_text, days):
+    return Question.objects.create(question_text=question_text, pub_date=timezone.now() + datetime.timedelta(days=days))
+
 class QuestionIndexViewTests(TestCase):
 
     def test_no_questions(self):
@@ -33,5 +36,25 @@ class QuestionIndexViewTests(TestCase):
         """
         response = self.client.get(reverse('polls:index'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "No polls are available.")
+        self.assertContains(response, 'No polls are available.')
+        self.assertQuerysetEqual(response.context['question_list'], [])
+
+    def test_past_question(self):
+        """
+        Questions with a pub_date in the past are shown on the index page.
+        """
+        create_question('Past question?', -2)
+        response = self.client.get(reverse('polls:index'))
+        self.assertQuerysetEqual(
+            response.context['question_list'],
+            ['<Question: Past question?>']
+        )
+
+    def test_future_question(self):
+        """
+        Questions with a pub_date in the future are not shown on the index page.
+        """
+        create_question('Future question?', +2)
+        response = self.client.get(reverse('polls:index'))
+        self.assertContains(response, 'No polls are available.')
         self.assertQuerysetEqual(response.context['question_list'], [])
