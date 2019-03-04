@@ -1,4 +1,5 @@
 import datetime
+import json
 from django.test import TestCase
 from django.utils import timezone
 from django.urls import reverse
@@ -58,3 +59,26 @@ class QuestionIndexViewTests(TestCase):
         response = self.client.get(reverse('polls:index'))
         self.assertContains(response, 'No polls are available.')
         self.assertQuerysetEqual(response.context['question_list'], [])
+
+    def test_future_and_past_questions(self):
+        """
+        Only past questions are shown on the index page.
+        """
+        create_question(question_text='Past question', days=-5)
+        create_question(question_text='Future question', days=+5)
+        response = self.client.get(reverse('polls:index'))
+        self.assertQuerysetEqual(response.context['question_list'], ['<Question: Past question>'])
+
+    def test_multiple_past_questions(self):
+        """
+        Multiple past questions are shown on the index page.
+        """
+        create_question(question_text='Past question 1', days=-1)
+        create_question(question_text='Past question 2', days=-2)
+        response = self.client.get(reverse('polls:index'))
+        self.assertQuerysetEqual(
+            response.context['question_list'],
+            ['<Question: Past question 1>', '<Question: Past question 2>']
+        )
+
+
